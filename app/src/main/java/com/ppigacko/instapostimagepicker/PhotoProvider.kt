@@ -5,10 +5,9 @@ import java.io.File
 
 object PhotoProvider {
 
-    private val directoryByPhotos = mutableMapOf<String, MutableList<String>>()
+    const val ALL_PHOTO = "all_photos"
 
-    val allPhotos: List<String>
-        get() = directoryByPhotos.values.flatten()
+    private val directoryByPhotos = mutableMapOf<String, MutableList<String>>()
 
     val directories: List<String>
         get() = directoryByPhotos.keys.toList()
@@ -17,7 +16,7 @@ object PhotoProvider {
         get() = { directoryByPhotos[it] ?: emptyList() }
 
     fun init(): List<String> {
-        val resolver = MainApplication.contentResolver
+        val resolver = MainApplication.instance.contentResolver
         val mImageUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
 
         val cursor = resolver.query(
@@ -43,10 +42,10 @@ object PhotoProvider {
             val parentName = File(path).parentFile?.name ?: continue
 
             // save all Photo
-            if (directoryByPhotos["All Photos"] == null) {
-                directoryByPhotos["All Photos"] = mutableListOf()
+            if (directoryByPhotos[ALL_PHOTO] == null) {
+                directoryByPhotos[ALL_PHOTO] = mutableListOf()
             }
-            directoryByPhotos["All Photos"]?.add(path)
+            directoryByPhotos[ALL_PHOTO]?.add(path)
 
             // save by parent name
             if (directoryByPhotos[parentName] == null) {

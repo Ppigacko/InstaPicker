@@ -15,10 +15,11 @@ import coil.load
 import com.gun0912.tedpermission.coroutine.TedPermission
 import com.ppigacko.instapostimagepicker.album.AlbumAdapter
 import com.ppigacko.instapostimagepicker.album.AlbumDivider
-import com.ppigacko.instapostimagepicker.album.AlbumItem
 import com.ppigacko.instapostimagepicker.databinding.ActivityMainBinding
 import com.ppigacko.instapostimagepicker.photo.PhotoAdapter
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 
@@ -29,6 +30,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private lateinit var binding: ActivityMainBinding
+    private val viewModel = MainViewModel(PhotoProvider)
+
     private val photoAdapter by lazy {
         PhotoAdapter {
             binding.imageMain.load(it)
@@ -38,9 +41,9 @@ class MainActivity : AppCompatActivity() {
 
     private val albumAdapter by lazy {
         AlbumAdapter {
-            binding.buttonAlbum.text = it.directoryName
-            refreshPhotoList(PhotoProvider.directoryPhotos(it.directoryName))
+            viewModel.selectAlbum(it.directoryName)
             binding.textTitle.setText(R.string.new_posts)
+            binding.buttonAlbum.text = it.directoryName
             binding.layoutAlbum.isVisible = false
             binding.buttonCancel.isVisible = false
             binding.buttonNext.isVisible = true
@@ -52,6 +55,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        viewModel.selectAlbum(PhotoProvider.ALL_PHOTO)
 
         lifecycleScope.launch {
             val permissionResult = TedPermission.create().setPermissions(READ_EXTERNAL_STORAGE).check()
@@ -68,14 +73,16 @@ class MainActivity : AppCompatActivity() {
         binding.recyclerAlbums.adapter = albumAdapter
         binding.recyclerAlbums.addItemDecoration(AlbumDivider(10f, 0f, Color.BLACK))
 
-        PhotoProvider.directories.map {
-            AlbumItem(
-                previewImage = PhotoProvider.directoryPhotos(it).first().toUriWithFile(),
-                directoryName = it,
-                photoCount = PhotoProvider.directoryPhotos(it).size
-            )
-        }.also { albumAdapter.submitList(it) }
-        refreshPhotoList(PhotoProvider.allPhotos)
+        viewModel.albums.onEach {
+            albumAdapter.submitList(it)
+        }.launchIn(lifecycleScope)
+
+        viewModel.photos.onEach {
+            photoAdapter.submitList(it)
+            it.firstOrNull()?.let { binding.imageMain.load(it) }
+            delay(100)
+            binding.recyclerPhotos.smoothScrollToPosition(0)
+        }.launchIn(lifecycleScope)
 
         binding.buttonAlbum.setOnClickListener {
             binding.textTitle.setText(R.string.select_album)
@@ -108,15 +115,6 @@ class MainActivity : AppCompatActivity() {
             } else {
                 binding.imageMain.scaleType = ImageView.ScaleType.CENTER
             }
-        }
-    }
-
-    private fun refreshPhotoList(photoList: List<String>) {
-        photoAdapter.submitList(photoList.map { it.toUriWithFile() })
-        binding.imageMain.load(photoList.first().toUriWithFile())
-        lifecycleScope.launch {
-            delay(100)
-            binding.recyclerPhotos.smoothScrollToPosition(0)
         }
     }
 }
