@@ -4,7 +4,6 @@ import android.Manifest.permission.CAMERA
 import android.Manifest.permission.READ_EXTERNAL_STORAGE
 import android.content.Intent
 import android.graphics.Color
-import android.net.Uri
 import android.os.Bundle
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
@@ -21,7 +20,6 @@ import com.ppigacko.instapostimagepicker.databinding.ActivityMainBinding
 import com.ppigacko.instapostimagepicker.photo.PhotoAdapter
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.io.File
 
 
 class MainActivity : AppCompatActivity() {
@@ -56,34 +54,28 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         lifecycleScope.launch {
-            val permissionResult = TedPermission.create()
-                .setPermissions(READ_EXTERNAL_STORAGE)
-                .check()
+            val permissionResult = TedPermission.create().setPermissions(READ_EXTERNAL_STORAGE).check()
 
             if (!permissionResult.isGranted) {
                 finish()
             }
         }
 
-        binding.recyclerPhotos.animation = null
         binding.recyclerPhotos.layoutManager = GridLayoutManager(this, 4)
         binding.recyclerPhotos.adapter = photoAdapter
 
-        binding.recyclerAlbums.animation = null
         binding.recyclerAlbums.layoutManager = LinearLayoutManager(this)
         binding.recyclerAlbums.adapter = albumAdapter
         binding.recyclerAlbums.addItemDecoration(AlbumDivider(10f, 0f, Color.BLACK))
 
         PhotoProvider.getImagesPath(this)
-        PhotoProvider.directories
-            .map {
-                AlbumItem(
-                    previewImage = Uri.fromFile(File(PhotoProvider.directoryPhotos(it).first())),
-                    directoryName = it,
-                    photoCount = PhotoProvider.directoryPhotos(it).size
-                )
-            }
-            .also { albumAdapter.submitList(it) }
+        PhotoProvider.directories.map {
+            AlbumItem(
+                previewImage = PhotoProvider.directoryPhotos(it).first().toUriWithFile(),
+                directoryName = it,
+                photoCount = PhotoProvider.directoryPhotos(it).size
+            )
+        }.also { albumAdapter.submitList(it) }
         refreshPhotoList(PhotoProvider.allPhotos)
 
         binding.buttonAlbum.setOnClickListener {
@@ -104,9 +96,7 @@ class MainActivity : AppCompatActivity() {
 
         binding.buttonCamera.setOnClickListener {
             lifecycleScope.launch {
-                val permissionResult = TedPermission.create()
-                    .setPermissions(CAMERA)
-                    .check()
+                val permissionResult = TedPermission.create().setPermissions(CAMERA).check()
                 if (permissionResult.isGranted) {
                     startActivity(Intent("android.media.action.IMAGE_CAPTURE"))
                 }
@@ -114,16 +104,17 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.imageCrop.setOnClickListener {
-            if (binding.imageMain.scaleType == ImageView.ScaleType.CENTER)
+            if (binding.imageMain.scaleType == ImageView.ScaleType.CENTER) {
                 binding.imageMain.scaleType = ImageView.ScaleType.CENTER_CROP
-            else
+            } else {
                 binding.imageMain.scaleType = ImageView.ScaleType.CENTER
+            }
         }
     }
 
     private fun refreshPhotoList(photoList: List<String>) {
-        photoAdapter.submitList(photoList.map { Uri.fromFile(File(it)) })
-        binding.imageMain.load(Uri.fromFile(File(photoList.first())))
+        photoAdapter.submitList(photoList.map { it.toUriWithFile() })
+        binding.imageMain.load(photoList.first().toUriWithFile())
         lifecycleScope.launch {
             delay(100)
             binding.recyclerPhotos.smoothScrollToPosition(0)
