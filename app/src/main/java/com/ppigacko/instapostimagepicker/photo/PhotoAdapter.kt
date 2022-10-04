@@ -1,4 +1,4 @@
-package com.ppigacko.instapostimagepicker
+package com.ppigacko.instapostimagepicker.photo
 
 import android.net.Uri
 import android.view.LayoutInflater
@@ -8,9 +8,9 @@ import androidx.recyclerview.widget.ListAdapter
 import com.ppigacko.instapostimagepicker.databinding.ItemRecentPhotoBinding
 
 
-class RecentPhotoAdapter(
+class PhotoAdapter(
     private val onItemClickListener: (Uri) -> Unit
-) : ListAdapter<Uri, RecentPhotoViewHolder>(DIFF) {
+) : ListAdapter<Uri, PhotoViewHolder>(DIFF) {
     companion object {
         val DIFF = object : DiffUtil.ItemCallback<Uri>() {
             override fun areItemsTheSame(oldItem: Uri, newItem: Uri): Boolean {
@@ -23,11 +23,11 @@ class RecentPhotoAdapter(
         }
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecentPhotoViewHolder {
-        return RecentPhotoViewHolder(ItemRecentPhotoBinding.inflate(LayoutInflater.from(parent.context)))
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PhotoViewHolder {
+        return PhotoViewHolder(ItemRecentPhotoBinding.inflate(LayoutInflater.from(parent.context)))
     }
 
-    override fun onBindViewHolder(holder: RecentPhotoViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: PhotoViewHolder, position: Int) {
         holder.bind(getItem(position), onItemClickListener)
     }
 }
