@@ -54,6 +54,24 @@ class MainActivity : AppCompatActivity() {
                 return true
             }
         })
+
+        binding.buttonCamera.setOnClickListener {
+            lifecycleScope.launch {
+                val permissionResult = TedPermission.create()
+                    .setPermissions(CAMERA)
+                    .check()
+                if (permissionResult.isGranted) {
+                    startActivity(Intent("android.media.action.IMAGE_CAPTURE"))
+                }
+            }
+        }
+
+        binding.imageCrop.setOnClickListener {
+            if (binding.imageMain.scaleType == ImageView.ScaleType.CENTER)
+                binding.imageMain.scaleType = ImageView.ScaleType.CENTER_CROP
+            else
+                binding.imageMain.scaleType = ImageView.ScaleType.CENTER
+        }
     }
 
 }
