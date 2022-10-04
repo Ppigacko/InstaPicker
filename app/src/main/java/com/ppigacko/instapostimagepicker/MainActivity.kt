@@ -68,7 +68,6 @@ class MainActivity : AppCompatActivity() {
         binding.recyclerAlbums.adapter = albumAdapter
         binding.recyclerAlbums.addItemDecoration(AlbumDivider(10f, 0f, Color.BLACK))
 
-        PhotoProvider.getImagesPath(this)
         PhotoProvider.directories.map {
             AlbumItem(
                 previewImage = PhotoProvider.directoryPhotos(it).first().toUriWithFile(),

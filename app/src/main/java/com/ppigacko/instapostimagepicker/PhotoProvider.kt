@@ -1,6 +1,5 @@
 package com.ppigacko.instapostimagepicker
 
-import android.app.Activity
 import android.provider.MediaStore
 import java.io.File
 
@@ -17,8 +16,8 @@ object PhotoProvider {
     val directoryPhotos: (String) -> List<String>
         get() = { directoryByPhotos[it] ?: emptyList() }
 
-    fun getImagesPath(activity: Activity): List<String> {
-        val resolver = activity.contentResolver
+    fun init(): List<String> {
+        val resolver = MainApplication.contentResolver
         val mImageUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
 
         val cursor = resolver.query(
